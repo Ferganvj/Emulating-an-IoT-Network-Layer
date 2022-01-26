@@ -1,0 +1,48 @@
+!pip install overpy
+!pip install pandas
+
+import overpy
+import pandas as pd
+from pandas import json_normalize
+
+import json
+import requests
+import numpy
+import urllib
+
+import networkx as nx
+from networkx.algorithms import tree
+
+import matplotlib.pyplot as plt
+
+city = 'Pretoria'   #Location city
+latitude = '-25.748486736755563'   # Latitiude coordinate of Pretoria -25.743543
+longitude = '28.23225086416299'    # Longitude coordinate of Pretoria 28.228390
+radius = '10000'    # Search radius of 1 000m = 100km
+
+## Creating query to search for parking lots by making use of amenity tagged as parking
+pre = """[out:json][timeout:50];(node["amenity"="parking"](around:"""
+post = """););out body;>;out skel qt;"""
+query = radius+','+latitude+','+longitude
+Query = pre + query + post
+
+# Connecting to the overpass API
+api = overpy.Overpass()
+
+ # Getting results of query from overpass API
+result = api.query(Query)  
+list_of_node_tags = []
+for node in result.nodes:
+    node.tags['latitude'] = node.lat
+    node.tags['longitude'] = node.lon
+    node.tags['id'] = node.id
+    list_of_node_tags.append(node.tags)
+
+    # Storing the data into a 'pandas' dataframe
+    data_frame = pd.DataFrame(list_of_node_tags)
+
+# Storing 'id', 'latitude', 'longitude' data
+data_to_write = data_frame[[ 'id', 'latitude', 'longitude']].dropna(subset=[ 'id', 'latitude', 'longitude'])
+id = data_to_write['id'].tolist()
+print(len(id))
+print(data_to_write)
